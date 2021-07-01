@@ -1,119 +1,19 @@
-﻿#include "stdio.h"
+﻿/* 导入配置文件 */
+#include"config.h"
+/* 导入头文件 */
+#include "stdio.h"
 #include "string.h"
 #include<Windows.h>
+#include<iostream>
+using namespace std;
 
-#define ACC -2
 
-#define sy_if     0
-#define sy_then   1
-#define sy_else   2
-#define sy_while  3
-#define sy_begin  4
-#define sy_do     5
-#define sy_end    6
-#define a         7  //赋值语句
-#define semicolon 8  //;
-#define e         9  //布尔表达式
-#define jinghao   10  //#
-#define S         11  //语句
-#define L         12  //复合语句
-
-#define tempsy    15  //临时变量
-#define EA        18  // B∧
-#define E0        19  // B∨
-
-#define plus      34  //+
-#define sub       35  //-
-#define times     36  //*
-#define div       37  // /
-#define becomes   38  //:=
-#define op_and    39
-#define op_or     40
-#define op_not    41
-#define rop       42  //关系运算符
-
-#define lparent   48  // (
-#define rparent   49  // )
-#define ident     56  //变量
-#define intconst  57  //整常量
-
-char ch = '\0';//当前字符
-int  count = 0;//词法分析结果缓冲区计数器
-static char spelling[10] = { "" };//存放识别的字
-static char line[81] = { "" };//一行字符缓冲区  最多80个
-char* pline;//字符缓冲区指针
-
-static char ntab1[100][10];//变量名表
-struct ntab {
-	int tc;//真
-	int fc;//假
-}ntab2[200];
-int label = 0;//指向ntab2的指针
-
-struct rwords {//保留字表的结构
-	char sp[10];
-	int  sy;
-};
-struct rwords reswords[10] = {//保留字表初始化
-	{"if",sy_if},
-	{"do",sy_do},
-	{"else",sy_else},
-	{"while",sy_while},
-	{"then",sy_then},
-	{"begin",sy_begin},
-	{"end",sy_end},
-	{"and",op_and},
-	{"or",op_or},
-	{"not",op_not}
-};
-
-struct aa
-{
-	int sy1;//单词种别编码
-	int pos;//单词自身的值
-}buf[1000],//词法分析结果缓冲区
-n,//当前字符
-n1,//当前表达式中的字符
-E,//非终结符
-sstack[100],//符号栈
-ibuf[100],//缓冲区
-stack[1000];//语法分析加工处理使用的符号栈
-struct aa oth;//四元式中的空白位置
-struct fourexp//四元式的结构
-{
-	char op[10];
-	struct aa arg1;
-	struct aa arg2;
-	int result;
-}fexp[200];
-int ssp = 0;//指向sstack[100]
-struct aa* pbuf = buf;//指向词法分析缓冲区
-int nlength = 0;//词法分析中记录单词长度
-int lnum = 0;//源程序长度
-int tt1 = 0;//变量名表指针
 FILE* cfile;//源程序文件
 
-int newt = 0;//临时变量
-int nxq = 100;//nxq指向下一个形成的四元式的地址
-int lr;//扫描LR分析表1过程中保存的当前状态值
-int lr1;//扫描LR分析表2或3过程中保存的当前状态值
-int sp = 0;//查找LR分析表时状态栈的栈顶指针
-int stack1[100];//定义状态栈
-int sp1 = 0;//定义状态栈1的栈顶指针
-int num = 0;//缓冲区指针
-struct ll
-{
-	int nxq1;
-	int tc1;
-	int fc1;
-}labelmark[10];
-int labeltemp[10];
-int pointmark = -1, pointtemp = -1;
-int sign = 0;//sign=1，表达式为赋值语句  sign=2，表达式为布尔表达式
 
-		   /********************从文件读一行到缓冲区**********************/
-void readline()
-{
+
+/********************从文件读一行到缓冲区**********************/
+void readline() {
 	char ch1;
 	pline = line;
 	ch1 = getc(cfile);
@@ -130,12 +30,12 @@ void readline()
 /**********************从缓冲区读取一个字符*********************/
 void readch()
 {
-	if (ch == '\0')
+	if (current_ch == '\0')
 	{
 		readline();
 		lnum++;//读取一行，源程序长度+1
 	}
-	ch = *pline;
+	current_ch = *pline;
 	pline++;
 }
 
@@ -146,7 +46,7 @@ int find(char spel[])//与变量名表中的变量进行匹配，查找变量名
 	int ii = 0;
 	while ((ss1 == 0) && (ii < nlength))
 	{
-		if (!strcmp(spel, ntab1[ii]))//查找匹配
+		if (!strcmp(spel, table_variable[ii]))//查找匹配
 			ss1 = 1;
 		ii++;
 	}
@@ -154,21 +54,20 @@ int find(char spel[])//与变量名表中的变量进行匹配，查找变量名
 		return ii - 1;//找到
 	else return -1;//未找到
 }
-int identifier()//识别保留字和标识符
-{
+
+/* 识别保留字和标识符 */
+int identifier() {
 	int iii = 0, j, k;
 	int ss = 0;
 	k = 0;
-	do
-	{
-		spelling[k] = ch;
+	do {
+		spelling[k] = current_ch;
 		k++;
 		readch();
-	} while (((ch >= 'a') && (ch <= 'z')) || ((ch >= '0') && (ch <= '9')));
+	} while (((current_ch >= 'a') && (current_ch <= 'z')) || ((current_ch >= '0') && (current_ch <= '9')));
 	pline--;
 	spelling[k] = '\0';
-	while ((ss == 0) && (iii < 10))
-	{
+	while ((ss == 0) && (iii < 10)) {
 		if (!strcmp(spelling, reswords[iii].sp))//保留字匹配
 			//strcmp(s1,s2) 比较两个字符串并根据比较结果返回整数
 			//当s1<s2 返回负数
@@ -178,51 +77,44 @@ int identifier()//识别保留字和标识符
 		iii++;
 	}
 	/*关键字匹配*/
-	if (ss == 1)//为保留字
-	{
-		buf[count].sy1 = reswords[iii - 1].sy;
+	if (ss == 1) {	// 为保留字
+		buf[count_buf].sy1 = reswords[iii - 1].sy;
 	}
-	else
-	{
-		buf[count].sy1 = ident;//是标识符，变量名
+	else {
+		buf[count_buf].sy1 = ident;//是标识符，变量名
 		j = find(spelling);
-		if (j == -1)//没在变量名表中，则添加
-		{
-			buf[count].pos = tt1;
-			strcpy_s(ntab1[tt1], spelling);
+		if (j == -1) {	//没在变量名表中，则添加
+			buf[count_buf].pos = tt1;
+			strcpy_s(table_variable[tt1], spelling);
 			tt1++;
 			nlength++;
 		}
-		else buf[count].pos = j;//获得变量名自身的值
+		else buf[count_buf].pos = j;//获得变量名自身的值
 	}
-	count++;
+	count_buf++;
 	for (k = 0; k < 10; k++) spelling[k] = ' ';//清空单词符号缓冲区
 }
 
 /**********************数字识别*************************/
-void number()
-{
+void number() {
 	int ivalue = 0;
 	int digit;
-	do
-	{
-		digit = ch - '0';
+	do {
+		digit = current_ch - '0';
 		ivalue = ivalue * 10 + digit;//数字字符转换为十进制整常数
 		readch();
-	} while ((ch >= '0') && (ch <= '9'));
-	buf[count].sy1 = intconst;
-	buf[count].pos = ivalue;
-	count++;
+	} while ((current_ch >= '0') && (current_ch <= '9'));
+	buf[count_buf].sy1 = intconst;
+	buf[count_buf].pos = ivalue;
+	count_buf++;
 	pline--;
 }
 
 /***********************扫描函数************************/
 /* 滤除多余空格并对主要单词分析处理 */
-void scan()
-{
-	while (ch != '~')
-	{
-		switch (ch)
+void scan() {
+	while (current_ch != '~') {
+		switch (current_ch)
 		{
 		case ' ':break;
 		case 'a':
@@ -264,83 +156,83 @@ void scan()
 		case '9':
 			number(); break;//识别整常数
 		case '<':readch();
-			if (ch == '=')
-				buf[count].pos = 0;// <=
+			if (current_ch == '=')
+				buf[count_buf].pos = 0;// <=
 			else
 			{
-				if (ch == '>') buf[count].pos = 4;// <>
+				if (current_ch == '>') buf[count_buf].pos = 4;// <>
 				else
 				{
-					buf[count].pos = 1;//<
+					buf[count_buf].pos = 1;//<
 					pline--;
 				}
 			}
-			buf[count].sy1 = rop;
-			count++;
+			buf[count_buf].sy1 = rop;
+			count_buf++;
 			break;
 		case '>':
 			readch();
-			if (ch == '=')
-				buf[count].pos = 2;// >=
+			if (current_ch == '=')
+				buf[count_buf].pos = 2;// >=
 			else
 			{
-				buf[count].pos = 3;// >
+				buf[count_buf].pos = 3;// >
 				pline--;
 			}
-			buf[count].sy1 = rop;
-			count++;
+			buf[count_buf].sy1 = rop;
+			count_buf++;
 			break;
 		case '(':
-			buf[count].sy1 = lparent;
-			count++;
+			buf[count_buf].sy1 = lparent;
+			count_buf++;
 			break;
 		case ')':
-			buf[count].sy1 = rparent;
-			count++;
+			buf[count_buf].sy1 = rparent;
+			count_buf++;
 			break;
 		case '#':
-			buf[count].sy1 = jinghao;
-			count++;
+			buf[count_buf].sy1 = jinghao;
+			count_buf++;
 			break;
 		case '+':
-			buf[count].sy1 = plus;
-			count++;
+			buf[count_buf].sy1 = op_plus;
+			count_buf++;
 			break;
 			/*
 			case '-':
-				buf[count].sy1 = sub;
-				count++;
+				buf[count_buf].sy1 = op_sub;
+				count_buf++;
 				break;
 			*/
 		case '*':
-			buf[count].sy1 = times;
-			count++;
+			buf[count_buf].sy1 = op_times;
+			count_buf++;
 			break;
 			/*
 		case '/':
-			buf[count].sy1 = div;
-			count++;
+			buf[count_buf].sy1 = op_div;
+			count_buf++;
 			break;
 			*/
 		case ':':
 			readch();
-			if (ch == '=')
-				buf[count].sy1 = becomes;// :=
-			count++;
+			if (current_ch == '=')
+				buf[count_buf].sy1 = becomes;// :=
+			count_buf++;
 			break;
 		case '=':
-			buf[count].sy1 = rop;
-			buf[count].pos = 5;
-			count++;
+			buf[count_buf].sy1 = rop;
+			buf[count_buf].pos = 5;
+			count_buf++;
 			break;
 		case ';':
-			buf[count].sy1 = semicolon;
-			count++;
+			buf[count_buf].sy1 = semicolon;
+			count_buf++;
 			break;
 		}
 		readch();
 	}
-	buf[count].sy1 = -1;
+	buf[count_buf].sy1 = -1;
 }
 
 /********************程序语句的LR分析表********************/
@@ -456,27 +348,27 @@ void backpatch(int p, int t)//返填函数
 		q = tempq;
 	}
 }
+
 /*********************************************************/
-int change1(int chan)
-{
-	switch (chan)
-	{
+int change1(int chan) {
+	switch (chan) {
 	case ident:
 	case intconst:return 0;
-	case plus:return 1;
-		//case sub:return 2;
-	case times:return 2;
-		//case div:return 4;
+	case op_plus:return 1;
+		//case op_sub:return 2;
+	case op_times:return 2;
+		//case op_div:return 4;
 	case lparent:return 3;
 	case rparent:return 4;
 	case jinghao:return 5;
 	case tempsy:return 6;
+	default:
+		return -1;
 	}
 }
-int change2(int chan)
-{
-	switch (chan)
-	{
+
+int change2(int chan) {
+	switch (chan) {
 	case ident:
 	case intconst:return 0;
 	case rop:return 1;
@@ -489,24 +381,27 @@ int change2(int chan)
 	case tempsy:return 8;
 	case EA:return 9;
 	case E0:return 10;
+	default:
+		return -1;
+		// do nothing
 	}
 }
 /*********************赋值语句和算术表达式的分析**********************/
 int lrparse1(int num)
 {
 	lr1 = action1[stack1[sp1]][change1(n1.sy1)];
-	if (lr1 == -1)
-	{
+	if (lr1 == -1) {
 		printf("\n算术表达式或赋值语句出错!\n");
-		getchar();
+		// getchar();
+		cout << endl;
 		exit(0);
 	}
-	if ((lr1 < 10) && (lr1 >= 0))//移进状态
+	/* 移进状态 */
+	if ((lr1 < 10) && (lr1 >= 0))
 	{
 		sp1++;
 		stack1[sp1] = lr1;
-		if (n1.sy1 != tempsy)
-		{
+		if (n1.sy1 != tempsy) {
 			ssp++;
 			num++;
 			sstack[ssp].sy1 = n1.sy1;//将变量名压栈
@@ -516,10 +411,9 @@ int lrparse1(int num)
 		n1.pos = ibuf[num].pos;
 		lrparse1(num);
 	}
-	if ((lr1 >= 100) && (lr1 < 105))//归约状态
-	{
-		switch (lr1)
-		{
+	/* 归约状态 */
+	if ((lr1 >= 100) && (lr1 < 105)) {
+		switch (lr1) {
 		case 100:break;// S'->E
 		case 101:
 			E.pos = newtemp();// E->E+E
@@ -569,7 +463,8 @@ int lrparse2(int num)
 	{
 		if (sign == 2) printf("\nwhile语句出错\n");
 		if (sign == 3) printf("\nif语句出错\n");
-		getchar();
+		// getchar();
+		cout << endl;
 		exit(0);
 	}
 	if ((lr1 < 16) && (lr1 >= 0))//移进状态
@@ -693,10 +588,10 @@ int test(int value)
 	{
 	case intconst:
 	case ident:
-	case plus:
-	case sub:
-	case times:
-	case div:
+	case op_plus:
+	case op_sub:
+	case op_times:
+	case op_div:
 	case becomes:
 	case lparent:
 	case rparent:
@@ -865,7 +760,7 @@ void disp1()
 {
 	int temp1 = 0;
 	printf("\n*****************词法分析结果********************\n");
-	for (temp1 = 0; temp1 < count; temp1++)
+	for (temp1 = 0; temp1 < count_buf; temp1++)
 	{
 		printf("\t%d\t\t%d\n", buf[temp1].sy1, buf[temp1].pos);
 	}
@@ -883,7 +778,7 @@ void disp2()
 		printf("%d\t", temp1);
 		printf("（%s,\t", fexp[temp1].op);
 		if (fexp[temp1].arg1.sy1 == ident)//为变量
-			printf("%s,\t", ntab1[fexp[temp1].arg1.pos]);
+			printf("%s,\t", table_variable[fexp[temp1].arg1.pos]);
 		else
 		{
 			if (fexp[temp1].arg1.sy1 == tempsy)//为临时变量
@@ -897,7 +792,7 @@ void disp2()
 			}
 		}
 		if (fexp[temp1].arg2.sy1 == ident)
-			printf("%s,\t", ntab1[fexp[temp1].arg2.pos]);
+			printf("%s,\t", table_variable[fexp[temp1].arg2.pos]);
 		else
 		{
 			if (fexp[temp1].arg2.sy1 == tempsy)
@@ -914,14 +809,14 @@ void disp2()
 			if (fexp[temp1].result >= 100)
 				printf("T%d\t)", fexp[temp1].result - 100);
 			else
-				printf("%s\t)", ntab1[fexp[temp1].result]);
+				printf("%s\t)", table_variable[fexp[temp1].result]);
 		}
 		else
 			printf("%d\t)", fexp[temp1].result);
-		if (temp1 == 20)
-		{
+		if (temp1 == 20) {
 			printf("\npress any key to continue......\n");
-			getchar();
+			// getchar();
+			cout << endl;
 		}
 		printf("\n");
 	}
@@ -931,12 +826,14 @@ void disp2()
 void disp3()
 {
 	int tttt;
-	printf("\n\n程序总共%d行，产生了%d个二元式!\n", lnum, count);
-	getchar();
+	printf("\n\n程序总共%d行，产生了%d个二元式!\n", lnum, count_buf);
+	// getchar();
+	cout << endl;
 	printf("\n******************变量名表**********************\n");
 	for (tttt = 0; tttt < tt1; tttt++)
-		printf("%d\t%s\n", tttt, ntab1[tttt]);
-	getchar();
+		printf("%d\t%s\n", tttt, table_variable[tttt]);
+	// getchar();
+	cout << endl;
 }
 
 /***********************主函数***************************/
@@ -954,13 +851,16 @@ int main() {
 	printf("\n*************状态栈加工过程及归约顺序*************\n");
 	readnu();//从二元式读一个字符
 	lrparse();
-	getchar();
+	// getchar();
+	cout << endl;
 	//四元式分析
 	disp2();
+	// getchar();
+	cout << endl;
 
 	printf("**************************************************************");
 	printf("\n程序运行结束!\n");
-	getchar();
+
 	return 0;
 	system("pause");
 }
