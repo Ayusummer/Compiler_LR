@@ -5,12 +5,12 @@
 char current_ch = '\0';		// 当前字符为空字符
 int lnum = 0;				// 源程序长度
 int tt1 = 0;				// 变量名表指针
-aa* pbuf = buf;				// 指向词法分析缓冲区
+aa* pbuf = buffer_lexical;				// 指向词法分析缓冲区
 int nlength = 0;			// 词法分析中记录单词长度
 FILE* source_file = NULL;
 char* pline = NULL;
 errno_t error_source_file = 0;
-aa buf[1000] = {};
+aa buffer_lexical[1000] = {};
 
 void init_source_file() {
 	error_source_file = fopen_s(&source_file, "pas.dat", "r");//打开C源文件
@@ -19,7 +19,7 @@ void init_source_file() {
 /********************从文件读一行到缓冲区**********************/
 void readline() {
 	char nxt_char_source_file = getc(source_file);	// 读取来自 source_file 的下一个字符
-	pline = line;
+	pline = buffer_line;
 	/* 读取一行源文件字符 */
 	while ((nxt_char_source_file != '\n') && (nxt_char_source_file != EOF)) {
 		*pline = nxt_char_source_file;
@@ -27,7 +27,7 @@ void readline() {
 		nxt_char_source_file = getc(source_file);
 	}
 	*pline = '\0';
-	pline = line;
+	pline = buffer_line;
 }
 
 /**********************从缓冲区读取一个字符*********************/
@@ -79,18 +79,18 @@ int identifier() {
 	}
 	/*关键字匹配*/
 	if (ss == 1) {	// 为保留字
-		buf[count_buf].sy1 = reswords[iii - 1].sy;
+		buffer_lexical[count_buf].sy1 = reswords[iii - 1].sy;
 	}
 	else {
-		buf[count_buf].sy1 = ident;//是标识符，变量名
+		buffer_lexical[count_buf].sy1 = ident;//是标识符，变量名
 		j = find(spelling);
 		if (j == -1) {	//没在变量名表中，则添加
-			buf[count_buf].pos = tt1;
+			buffer_lexical[count_buf].pos = tt1;
 			strcpy_s(table_variable[tt1], spelling);
 			tt1++;
 			nlength++;
 		}
-		else buf[count_buf].pos = j;//获得变量名自身的值
+		else buffer_lexical[count_buf].pos = j;//获得变量名自身的值
 	}
 	count_buf++;
 	for (k = 0; k < 10; k++) spelling[k] = ' ';//清空单词符号缓冲区
@@ -105,8 +105,8 @@ void number() {
 		ivalue = ivalue * 10 + digit;//数字字符转换为十进制整常数
 		readch();
 	} while ((current_ch >= '0') && (current_ch <= '9'));
-	buf[count_buf].sy1 = intconst;
-	buf[count_buf].pos = ivalue;
+	buffer_lexical[count_buf].sy1 = intconst;
+	buffer_lexical[count_buf].pos = ivalue;
 	count_buf++;
 	pline--;
 }
@@ -158,82 +158,82 @@ void scan() {
 			number(); break;//识别整常数
 		case '<':readch();
 			if (current_ch == '=')
-				buf[count_buf].pos = 0;// <=
+				buffer_lexical[count_buf].pos = 0;// <=
 			else
 			{
-				if (current_ch == '>') buf[count_buf].pos = 4;// <>
+				if (current_ch == '>') buffer_lexical[count_buf].pos = 4;// <>
 				else
 				{
-					buf[count_buf].pos = 1;//<
+					buffer_lexical[count_buf].pos = 1;//<
 					pline--;
 				}
 			}
-			buf[count_buf].sy1 = rop;
+			buffer_lexical[count_buf].sy1 = rop;
 			count_buf++;
 			break;
 		case '>':
 			readch();
 			if (current_ch == '=')
-				buf[count_buf].pos = 2;// >=
+				buffer_lexical[count_buf].pos = 2;// >=
 			else
 			{
-				buf[count_buf].pos = 3;// >
+				buffer_lexical[count_buf].pos = 3;// >
 				pline--;
 			}
-			buf[count_buf].sy1 = rop;
+			buffer_lexical[count_buf].sy1 = rop;
 			count_buf++;
 			break;
 		case '(':
-			buf[count_buf].sy1 = lparent;
+			buffer_lexical[count_buf].sy1 = lparent;
 			count_buf++;
 			break;
 		case ')':
-			buf[count_buf].sy1 = rparent;
+			buffer_lexical[count_buf].sy1 = rparent;
 			count_buf++;
 			break;
 		case '#':
-			buf[count_buf].sy1 = jinghao;
+			buffer_lexical[count_buf].sy1 = jinghao;
 			count_buf++;
 			break;
 		case '+':
-			buf[count_buf].sy1 = op_plus;
+			buffer_lexical[count_buf].sy1 = op_plus;
 			count_buf++;
 			break;
 			/*
 			case '-':
-				buf[count_buf].sy1 = op_sub;
+				buffer_lexical[count_buf].sy1 = op_sub;
 				count_buf++;
 				break;
 			*/
 		case '*':
-			buf[count_buf].sy1 = op_times;
+			buffer_lexical[count_buf].sy1 = op_times;
 			count_buf++;
 			break;
 			/*
 		case '/':
-			buf[count_buf].sy1 = op_div;
+			buffer_lexical[count_buf].sy1 = op_div;
 			count_buf++;
 			break;
 			*/
 		case ':':
 			readch();
 			if (current_ch == '=')
-				buf[count_buf].sy1 = becomes;// :=
+				buffer_lexical[count_buf].sy1 = becomes;// :=
 			count_buf++;
 			break;
 		case '=':
-			buf[count_buf].sy1 = rop;
-			buf[count_buf].pos = 5;
+			buffer_lexical[count_buf].sy1 = rop;
+			buffer_lexical[count_buf].pos = 5;
 			count_buf++;
 			break;
 		case ';':
-			buf[count_buf].sy1 = semicolon;
+			buffer_lexical[count_buf].sy1 = semicolon;
 			count_buf++;
 			break;
 		}
 		readch();
 	}
-	buf[count_buf].sy1 = -1;
+	buffer_lexical[count_buf].sy1 = -1;
 }
 
 /*************************显示词法分析结果*******************************/
@@ -241,7 +241,14 @@ void disp1() {
 	int temp1 = 0;
 	printf("\n*****************词法分析结果********************\n");
 	for (temp1 = 0; temp1 < count_buf; temp1++) {
-		printf("\t%d\t\t%d\n", buf[temp1].sy1, buf[temp1].pos);
+		printf("\t%d\t\t%d\n", buffer_lexical[temp1].sy1, buffer_lexical[temp1].pos);
 	}
 	//getchar();
+}
+
+void lexical_analyse() {
+	init_source_file();	// 初始化输入文件
+	readch();			// 从源文件读字符
+	scan();				// 词法分析
+	disp1();			// 显示词法分析结果
 }

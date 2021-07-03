@@ -9,7 +9,6 @@
 #include<iostream>
 using namespace std;
 
-extern FILE* source_file;	// 源程序文件
 
 ntab ntab2[200];
 int label = 0;		// 指向ntab2的指针?
@@ -640,10 +639,8 @@ void disp3()
 
 /***********************主函数***************************/
 int main() {
-	init_source_file();	// 初始化输入文件
-	readch();			// 从源文件读字符
-	scan();				//词法分析
-	disp1();			//显示词法分析结果
+	lexical_analyse();	// 词法分析
+
 	disp3();			// 显示变量名
 	stack[sp].pos = 0;
 	stack[sp].sy1 = -1;	// 初始化状态栈

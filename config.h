@@ -39,6 +39,7 @@ struct rwords {
 };
 extern rwords reswords[10];
 
+// 二元式结构
 struct aa {
 	int sy1;	// 单词种别编码
 	int pos;	// 单词自身的值
