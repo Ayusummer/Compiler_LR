@@ -20,11 +20,11 @@ lparent = 48, rparent = 49,
 ident = 56,
 intconst = 57;
 
-extern char current_ch;		// 当前字符
+
 extern int  count_buf;		// 词法分析结果缓冲区计数器
 
 static char spelling[10] = { "" };	// 存放识别的字
-static char line[81] = { "" };		// 一行字符缓冲区  最多80个
+
 static char table_variable[100][10];		// 变量名表
 
 struct ntab {
