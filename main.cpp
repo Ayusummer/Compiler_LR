@@ -7,37 +7,78 @@
 #include<iostream>
 using namespace std;
 
+char* pline;	// 字符缓冲区指针
 
-FILE* cfile;//源程序文件
+
+ntab ntab2[200];
+int label = 0;		// 指向ntab2的指针?
 
 
+
+
+
+aa	buf[1000],	// 词法分析结果缓冲区
+n,				// 当前字符
+n1,				// 当前表达式中的字符
+E,				// 非终结符
+sstack[100],	// 符号栈
+ibuf[100],		// 缓冲区
+stack[1000];	// 语法分析加工处理使用的符号栈
+
+aa oth;//四元式中的空白位置
+
+
+fourexp fexp[200];
+
+int ssp = 0;//指向sstack[100]
+
+struct aa* pbuf = buf;//指向词法分析缓冲区
+int nlength = 0;//词法分析中记录单词长度
+int lnum = 0;	// 源程序长度
+int tt1 = 0;//变量名表指针
+
+int newt = 0;//临时变量
+int nxq = 100;//nxq指向下一个形成的四元式的地址
+int lr;//扫描LR分析表1过程中保存的当前状态值
+int lr1;//扫描LR分析表2或3过程中保存的当前状态值
+int sp = 0;//查找LR分析表时状态栈的栈顶指针
+int stack1[100];//定义状态栈
+int sp1 = 0;//定义状态栈1的栈顶指针
+int num = 0;//缓冲区指针
+
+
+ll labelmark[10];
+
+int labeltemp[10];
+int pointmark = -1, pointtemp = -1;
+int sign = 0;//sign=1，表达式为赋值语句  sign=2，表达式为布尔表达式
+
+FILE* source_file;	// 源程序文件
 
 /********************从文件读一行到缓冲区**********************/
 void readline() {
-	char ch1;
+	char nxt_char_source_file = getc(source_file);	// 读取来自 source_file 的下一个字符
 	pline = line;
-	ch1 = getc(cfile);
-	while ((ch1 != '\n') && (ch1 != EOF))
-	{
-		*pline = ch1;
+	/* 读取一行源文件字符 */
+	while ((nxt_char_source_file != '\n') && (nxt_char_source_file != EOF)) {
+		*pline = nxt_char_source_file;
 		pline++;
-		ch1 = getc(cfile);
+		nxt_char_source_file = getc(source_file);
 	}
 	*pline = '\0';
 	pline = line;
 }
 
 /**********************从缓冲区读取一个字符*********************/
-void readch()
-{
-	if (current_ch == '\0')
-	{
+void readch() {
+	if (current_ch == '\0') {
 		readline();
-		lnum++;//读取一行，源程序长度+1
+		lnum++;		// 读取一行，源程序长度+1
 	}
 	current_ch = *pline;
 	pline++;
 }
+
 
 /***********************标识符和关键字的识别********************/
 int find(char spel[])//与变量名表中的变量进行匹配，查找变量名表
@@ -293,7 +334,6 @@ static int action2[16][11] =
  {-1,-1,-1,108,-1,9,10,108,-1,-1,-1}
 };
 
-
 /********************从二元式读入一个符号*********************/
 void readnu()
 {
@@ -447,7 +487,7 @@ int lrparse1(int num)
 		n1.pos = E.pos;
 		lrparse1(num);
 	}
-	if ((lr1 == ACC) && (stack1[sp1] == 1))//归约A->i:=E   
+	if ((lr1 == ACC) && (stack1[sp1] == 1))//归约A->i:=E
 	{
 		gen(":=", sstack[ssp], oth, ibuf[0].pos);
 		ssp = ssp - 3;
@@ -671,7 +711,7 @@ int lrparse()
 		switch (lr)
 		{
 		case 100:break;//S'->S
-		case 101://S->if e then s else s 
+		case 101://S->if e then s else s
 			printf("\nS->if e then S else S 归约\n");
 			sp = sp - 6;
 			n.sy1 = S;
@@ -764,7 +804,7 @@ void disp1()
 	{
 		printf("\t%d\t\t%d\n", buf[temp1].sy1, buf[temp1].pos);
 	}
-	//getchar(); 
+	//getchar();
 }
 /****************************四元式分析结果**********************************/
 void disp2()
@@ -820,7 +860,7 @@ void disp2()
 		}
 		printf("\n");
 	}
-	//getchar(); 
+	//getchar();
 }
 /*************************打印变量名表*******************************/
 void disp3()
@@ -836,11 +876,12 @@ void disp3()
 	cout << endl;
 }
 
+
 /***********************主函数***************************/
 int main() {
-	errno_t ccfile;
-	ccfile = fopen_s(&cfile, "pas.dat", "r");//打开C源文件
-	readch();//从源文件读字符
+	errno_t error_source_file;
+	error_source_file = fopen_s(&source_file, "pas.dat", "r");//打开C源文件
+	readch();		// 从源文件读字符
 	scan();//词法分析
 	disp1();//显示词法分析结果
 	disp3();//显示变量名
