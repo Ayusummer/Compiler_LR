@@ -111,8 +111,9 @@ int find_in_variableTable(char spel[]) {
 
 /* 识别保留字和标识符
 	其输入应当是个字符串
+	识别出关键词或者变量名
 	识别中会操作变量名表和词法分析缓冲区 */
-int keywordRecognize() {
+void stringRecognize() {
 	int index_wordRec = 0;			// 识别字数组下标; 初始化为 0
 	int index_resWords = 0;			// 保留字数组索引
 	int is_keyword = 0;				// 是否为保留字标记, 是 -> 1, 否 -> 0
@@ -194,7 +195,7 @@ void lexical_analyse() {
 		case ' ':break;
 		case 'a': /* continue case, case 语句不写 break 那么程序就会执行下一个case
 					所以说下面所有的 case 空操作都会依次执行,
-					也就是说只要识别到字母那么必然会一路执行到 case z 的 keywordRecognize()来识别保留字和标识符*/
+					也就是说只要识别到字母那么必然会一路执行到 case z 的 stringRecognize()来识别保留字和标识符*/
 		case 'b': // continue case
 		case 'c': // continue case
 		case 'd': // continue case
@@ -220,7 +221,7 @@ void lexical_analyse() {
 		case 'x': // continue case
 		case 'y': // continue case
 		case 'z':
-			keywordRecognize();	// 识别保留字和标识符
+			stringRecognize();	// 识别保留字和标识符
 			break;
 		case '0': // continue case
 		case '1': // continue case

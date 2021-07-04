@@ -26,7 +26,7 @@ extern keywords reserved_words[10];		// 保留字表
 extern char table_variable[100][10];	// 变量名表
 extern int num_variable;				// 词法分析中识别放到变量名表中的变量名数目
 int find_in_variableTable(char spel[]);	// 标识符和关键字的识别
-int keywordRecognize();					// 识别保留字和标识符
+void stringRecognize();					// 识别保留字和标识符,变量名
 
 extern two_exp buffer_lexical[1000];	// 词法分析结果缓冲区
 extern int  count_lexResult;			// 词法分析结果缓冲区计数器
