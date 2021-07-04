@@ -15,26 +15,28 @@ void readCh_from_buffer();				// 从缓冲区读取一个字符
 char show_nxtCh_buffer();				// 展示缓冲区下一个字符
 
 
+extern char word_recognized[10];		// 识别字数组,存放识别的字
+/* 保留字表的结构 */
+struct keywords {
+	char word[10];	// 保留字
+	int  wordCode;	// 保留字编码
+};
+extern keywords reserved_words[10];		// 保留字表
 
+extern char table_variable[100][10];	// 变量名表
+extern int num_variable;				// 词法分析中识别放到变量名表中的变量名数目
+int find_in_variableTable(char spel[]);	// 标识符和关键字的识别
+int keywordRecognize();					// 识别保留字和标识符
 
 extern two_exp buffer_lexical[1000];	// 词法分析结果缓冲区
+extern int  count_lexResult;			// 词法分析结果缓冲区计数器
+extern two_exp* pointer_bufLex;			// 词法分析缓冲区指针
+extern int num_lexVariable;				// 词法分析缓冲区中含有的变量的数目
 
+void numberRecognize();		// 数字识别
 
-
-
-
-int find(char spel[]);	// 标识符和关键字的识别
-int identifier();		// 识别保留字和标识符
-extern int tt1;			// 变量名表指针
-extern two_exp* pbuf;	// 指向词法分析缓冲区
-extern int nlength;		// 词法分析中记录单词长度
-
-void number();			// 数字识别
-
-/***********************扫描函数************************/
-void scan();			// 滤除多余空格并对主要单词分析处理
-
-void disp1();			// 显示词法分析结果
+void lexical_analyse();		// 扫描源程序->缓冲区->滤除多余空格并对主要单词分析处理
+void disp1();				// 显示词法分析结果
 
 /* 词法分析及结果显示 */
-void lexical_analyse();
+void lexical_analyse_global();

@@ -17,32 +17,23 @@ becomes = 38,
 op_and = 39, op_or = 40, op_not = 41,
 rop = 42,
 lparent = 48, rparent = 49,
-ident = 56,
+word_variable = 56,
+// 整数
 intconst = 57;
 
 
-extern int  count_buf;		// 词法分析结果缓冲区计数器
-
-static char spelling[10] = { "" };	// 存放识别的字
-
-static char table_variable[100][10];		// 变量名表
 
 struct ntab {
 	int tc;		// 真
 	int fc;		// 假
 };
 
-/* 保留字表的结构 */
-struct rwords {
-	char sp[10];
-	int  sy;
-};
-extern rwords reswords[10];
+
 
 /* 二元式结构 */
 struct two_exp {
-	int typeCode_word;	// 单词种别编码
-	int value_word;		// 单词自身的值
+	int wordCode;		// 单词种别编码
+	int wordSubCode;	// 单词子类编码
 };
 
 /* 四元式的结构 */

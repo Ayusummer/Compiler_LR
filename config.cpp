@@ -6,20 +6,3 @@ sy_begin = 4, sy_do = 5, sy_end = 6,
 a = 7,
 semicolon = 8,
 e = 9;
-
-
-int  count_buf = 0;			// 词法分析结果缓冲区计数器
-
-// 保留字表初始化
-rwords reswords[10] = {
-	{"if",sy_if},
-	{"do",sy_do},
-	{"else",sy_else},
-	{"while",sy_while},
-	{"then",sy_then},
-	{"begin",sy_begin},
-	{"end",sy_end},
-	{"and",op_and},
-	{"or",op_or},
-	{"not",op_not}
-};

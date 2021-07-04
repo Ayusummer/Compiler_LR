@@ -22,15 +22,32 @@ char current_ch = '\0';			// 当前字符初始化为空字符
 	在从源程序读完一行字符后自动 +1*/
 int lineNum_sourceCode = 0;
 
-int tt1 = 0;				// 变量名表指针
-two_exp* pbuf = buffer_lexical;				// 指向词法分析缓冲区
-int nlength = 0;			// 词法分析中记录单词长度
+
+char word_recognized[10] = "";				// 识别字数组,存放识别的字
+two_exp buffer_lexical[1000] = {};			// 词法分析结果缓冲区
+two_exp* pointer_bufLex = buffer_lexical;	// 词法分析缓冲区指针指向词法分析缓冲区
+int  count_lexResult = 0;					// 词法分析结果缓冲区计数器
+
+// 保留字表初始化
+keywords reserved_words[10] = {
+	{"if",sy_if},
+	{"do",sy_do},
+	{"else",sy_else},
+	{"while",sy_while},
+	{"then",sy_then},
+	{"begin",sy_begin},
+	{"end",sy_end},
+	{"and",op_and},
+	{"or",op_or},
+	{"not",op_not}
+};
+char table_variable[100][10] = {};		// 变量名表, 初始化为空
+int num_variable = 0;					// 词法分析中识别放到变量名表中的变量名数目
+int num_lexVariable = 0;				// 词法分析缓冲区中含有的变量的数目
 
 
 
-two_exp buffer_lexical[1000] = {};
-
-
+// 源程序文件初始化
 void init_source_file() {
 	// 以 read_only 模式打开源文件并返回错误码, 这里偷懒没做错误处理
 	error_source_file = fopen_s(&source_file, "pas.dat", "r");
@@ -52,8 +69,9 @@ void readLine_to_buffer() {
 	lineNum_sourceCode++;	// 每读取一行，源程序长度(行数)+1
 }
 
-/* 从缓冲区读取一个字符
-	从一行字符缓冲区中读取一个字符*/
+/* 从一行字符缓冲区中读取一个字符
+	若当前是字符结束标记则从源程序先读一行字符串
+	再从缓冲区中读一个字符 */
 void readCh_from_buffer() {
 	/* 如果当前字符为字符串结束标记, 那么说明缓冲区中没有待读取字符了
 		需要再从源程序中读一行字符到缓冲区 */
@@ -74,213 +92,246 @@ char show_nxtCh_buffer() {
 
 
 /***********************标识符和关键字的识别********************/
-// 与变量名表中的变量进行匹配，查找变量名表
-int find(char spel[]) {
-	int ss1 = 0;
-	int ii = 0;
-	while ((ss1 == 0) && (ii < nlength)) {
-		if (!strcmp(spel, table_variable[ii]))//查找匹配
-			ss1 = 1;
-		ii++;
+/* 与变量名表中的变量进行匹配，查找变量名表
+	若找到则返回其在变量名表中的索引
+	若未找到则返回 -1 */
+int find_in_variableTable(char spel[]) {
+	int is_variable = 0;	// 是否为变量名的标记, 是 -> 1, 否 -> 0
+	int index_tableVariable = 0;	// 变量名表下标初始化为 0
+	while ((is_variable == 0) && (index_tableVariable < num_variable)) {
+		if (!strcmp(spel, table_variable[index_tableVariable]))//查找匹配
+			is_variable = 1;
+		index_tableVariable++;
 	}
-	if (ss1 == 1)
-		return ii - 1;//找到
-	else return -1;//未找到
+	if (is_variable == 1)
+		return index_tableVariable - 1;	// 找到输入字符串所在变量名表中的索引
+	else
+		return -1;		// 未找到, 即输入字符串未录入变量名表
 }
 
-/* 识别保留字和标识符 */
-int identifier() {
-	int iii = 0, j, k;
-	int ss = 0;
-	k = 0;
+/* 识别保留字和标识符
+	其输入应当是个字符串
+	识别中会操作变量名表和词法分析缓冲区 */
+int keywordRecognize() {
+	int index_wordRec = 0;			// 识别字数组下标; 初始化为 0
+	int index_resWords = 0;			// 保留字数组索引
+	int is_keyword = 0;				// 是否为保留字标记, 是 -> 1, 否 -> 0
+	int wordIndex_variableTable;	// 字符在变量名表中的索引, 若字符不在变量名表中则 -> -1
+
+
+	// 将字母与数字读取到识别字数组中
 	do {
-		spelling[k] = current_ch;
-		k++;
+		word_recognized[index_wordRec] = current_ch;
+		index_wordRec++;
 		readCh_from_buffer();
 	} while (((current_ch >= 'a') && (current_ch <= 'z')) || ((current_ch >= '0') && (current_ch <= '9')));
+	word_recognized[index_wordRec] = '\0';	// 读完字母与数字将字符串结束标记附在数组尾
+	/* 由于每次最后一次识别都会多使缓冲区指针前进一次, 所以要相应后退一次
+		毕竟每次 readCh_from_buffer 都会动一次指针 */
 	pointer_buffer--;
-	spelling[k] = '\0';
-	while ((ss == 0) && (iii < 10)) {
-		if (!strcmp(spelling, reswords[iii].sp))//保留字匹配
-			//strcmp(s1,s2) 比较两个字符串并根据比较结果返回整数
-			//当s1<s2 返回负数
-			//当s1=s2 返回0
-			//当s1>s2 返回正数
-			ss = 1;
-		iii++;
+
+	while ((is_keyword == 0) && (index_resWords < 10)) {
+		if (!strcmp(word_recognized, reserved_words[index_resWords].word))	// 保留字匹配
+			is_keyword = 1;
+		index_resWords++;
 	}
-	/*关键字匹配*/
-	if (ss == 1) {	// 为保留字
-		buffer_lexical[count_buf].typeCode_word = reswords[iii - 1].sy;
+	/* 关键字匹配 */
+	if (is_keyword == 1) {
+		// 将已识别的保留字添加到词法分析缓冲区
+		buffer_lexical[count_lexResult].wordCode = reserved_words[index_resWords - 1].wordCode;
 	}
 	else {
-		buffer_lexical[count_buf].typeCode_word = ident;//是标识符，变量名
-		j = find(spelling);
-		if (j == -1) {	//没在变量名表中，则添加
-			buffer_lexical[count_buf].value_word = tt1;
-			strcpy_s(table_variable[tt1], spelling);
-			tt1++;
-			nlength++;
+		// 一个字符串不是关键字那么就只能是是标识符，变量名喽
+		buffer_lexical[count_lexResult].wordCode = word_variable;
+		wordIndex_variableTable = find_in_variableTable(word_recognized);
+		// 若当前字符串没在变量名表中
+		if (wordIndex_variableTable == -1) {
+			// 词法分析缓冲区当前字符子类码 = 当前缓冲区内的变量数目
+			buffer_lexical[count_lexResult].wordSubCode = num_lexVariable;
+			// 被识别变量加入到变量名表中
+			strcpy_s(table_variable[num_variable], word_recognized);
+			/* 变量名表和词法分析缓冲区域中的变量个数 +1
+				实际上二者根本就是完全一致 */
+			num_lexVariable++;
+			num_variable++;
 		}
-		else buffer_lexical[count_buf].value_word = j;//获得变量名自身的值
+		// 若当前字符串在变量名表中
+		else
+			/* 字符子类码则为变量在变量名表中的索引
+				毕竟变量名表中变量的顺序和词法分析缓冲区域中变量的顺序完全一致
+				因此在变量名表中的索引也即在词法分析缓冲区域中的索引 */
+			buffer_lexical[count_lexResult].wordSubCode = wordIndex_variableTable;
 	}
-	count_buf++;
-	for (k = 0; k < 10; k++) spelling[k] = ' ';//清空单词符号缓冲区
+	count_lexResult++;	// 每识别完一个变量代表词法分析结果多了一个
+	// 清空识别字数组
+	for (index_wordRec = 0; index_wordRec < 10; index_wordRec++)
+		word_recognized[index_wordRec] = ' ';
 }
 
 /**********************数字识别*************************/
-void number() {
-	int ivalue = 0;
+void numberRecognize() {
+	/* 当前已识别出来的数字
+		由于不知道下面一个字符是不是还是数字因此只能算是 tmp(临时的)
+		当下一个字符不再是数字是才结束迭代识别出完整的一个整数 */
+	int tmp_valueRecognized = 0;
 	int digit;
 	do {
 		digit = current_ch - '0';
-		ivalue = ivalue * 10 + digit;//数字字符转换为十进制整常数
+		tmp_valueRecognized = tmp_valueRecognized * 10 + digit;	// 数字字符转换为十进制整常数
 		readCh_from_buffer();
 	} while ((current_ch >= '0') && (current_ch <= '9'));
-	buffer_lexical[count_buf].typeCode_word = intconst;
-	buffer_lexical[count_buf].value_word = ivalue;
-	count_buf++;
-	pointer_buffer--;
+	buffer_lexical[count_lexResult].wordCode = intconst;
+	buffer_lexical[count_lexResult].wordSubCode = tmp_valueRecognized;
+	count_lexResult++;
+	pointer_buffer--;	// 由于每次最后一次识别都会多使缓冲区指针前进一次,所以要相应后退一次
 }
 
 /***********************扫描函数************************/
 /* 滤除多余空格并对主要单词分析处理 */
-void scan() {
+void lexical_analyse() {
 	while (!(current_ch == '#' && show_nxtCh_buffer() == '~')) {
 		switch (current_ch) {
 		case ' ':break;
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'h':
-		case 'i':
-		case 'j':
-		case 'k':
-		case 'l':
-		case 'm':
-		case 'n':
-		case 'o':
-		case 'p':
-		case 'q':
-		case 'r':
-		case 's':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'x':
-		case 'y':
+		case 'a': /* continue case, case 语句不写 break 那么程序就会执行下一个case
+					所以说下面所有的 case 空操作都会依次执行,
+					也就是说只要识别到字母那么必然会一路执行到 case z 的 keywordRecognize()来识别保留字和标识符*/
+		case 'b': // continue case
+		case 'c': // continue case
+		case 'd': // continue case
+		case 'e': // continue case
+		case 'f': // continue case
+		case 'g': // continue case
+		case 'h': // continue case
+		case 'i': // continue case
+		case 'j': // continue case
+		case 'k': // continue case
+		case 'l': // continue case
+		case 'm': // continue case
+		case 'n': // continue case
+		case 'o': // continue case
+		case 'p': // continue case
+		case 'q': // continue case
+		case 'r': // continue case
+		case 's': // continue case
+		case 't': // continue case
+		case 'u': // continue case
+		case 'v': // continue case
+		case 'w': // continue case
+		case 'x': // continue case
+		case 'y': // continue case
 		case 'z':
-			identifier(); break;//识别保留字和标识符
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
+			keywordRecognize();	// 识别保留字和标识符
+			break;
+		case '0': // continue case
+		case '1': // continue case
+		case '2': // continue case
+		case '3': // continue case
+		case '4': // continue case
+		case '5': // continue case
+		case '6': // continue case
+		case '7': // continue case
+		case '8': // continue case
 		case '9':
-			number(); break;//识别整常数
-		case '<':readCh_from_buffer();
+			numberRecognize();	// 识别整常数
+			break;
+		case '<':
+			readCh_from_buffer();
 			if (current_ch == '=')
-				buffer_lexical[count_buf].value_word = 0;// <=
+				buffer_lexical[count_lexResult].wordSubCode = 0;// <=
 			else
 			{
-				if (current_ch == '>') buffer_lexical[count_buf].value_word = 4;// <>
+				if (current_ch == '>') buffer_lexical[count_lexResult].wordSubCode = 4;// <>
 				else
 				{
-					buffer_lexical[count_buf].value_word = 1;//<
+					buffer_lexical[count_lexResult].wordSubCode = 1;//<
 					pointer_buffer--;
 				}
 			}
-			buffer_lexical[count_buf].typeCode_word = rop;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = rop;
+			count_lexResult++;
 			break;
 		case '>':
 			readCh_from_buffer();
 			if (current_ch == '=')
-				buffer_lexical[count_buf].value_word = 2;// >=
+				buffer_lexical[count_lexResult].wordSubCode = 2;// >=
 			else
 			{
-				buffer_lexical[count_buf].value_word = 3;// >
+				buffer_lexical[count_lexResult].wordSubCode = 3;// >
 				pointer_buffer--;
 			}
-			buffer_lexical[count_buf].typeCode_word = rop;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = rop;
+			count_lexResult++;
 			break;
 		case '(':
-			buffer_lexical[count_buf].typeCode_word = lparent;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = lparent;
+			count_lexResult++;
 			break;
 		case ')':
-			buffer_lexical[count_buf].typeCode_word = rparent;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = rparent;
+			count_lexResult++;
 			break;
 		case '#':
-			buffer_lexical[count_buf].typeCode_word = jinghao;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = jinghao;
+			count_lexResult++;
 			break;
 		case '+':
-			buffer_lexical[count_buf].typeCode_word = op_plus;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = op_plus;
+			count_lexResult++;
 			break;
 			/*
 			case '-':
-				buffer_lexical[count_buf].typeCode_word = op_sub;
-				count_buf++;
+				buffer_lexical[count_lexResult].wordCode = op_sub;
+				count_lexResult++;
 				break;
 			*/
 		case '*':
-			buffer_lexical[count_buf].typeCode_word = op_times;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = op_times;
+			count_lexResult++;
 			break;
 			/*
 		case '/':
-			buffer_lexical[count_buf].typeCode_word = op_div;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = op_div;
+			count_lexResult++;
 			break;
 			*/
 		case ':':
 			readCh_from_buffer();
 			if (current_ch == '=')
-				buffer_lexical[count_buf].typeCode_word = becomes;// :=
-			count_buf++;
+				buffer_lexical[count_lexResult].wordCode = becomes;// :=
+			count_lexResult++;
 			break;
 		case '=':
-			buffer_lexical[count_buf].typeCode_word = rop;
-			buffer_lexical[count_buf].value_word = 5;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = rop;
+			buffer_lexical[count_lexResult].wordSubCode = 5;
+			count_lexResult++;
 			break;
 		case ';':
-			buffer_lexical[count_buf].typeCode_word = semicolon;
-			count_buf++;
+			buffer_lexical[count_lexResult].wordCode = semicolon;
+			count_lexResult++;
 			break;
 		}
 		readCh_from_buffer();
 	}
-	buffer_lexical[count_buf].typeCode_word = -1;
+	buffer_lexical[count_lexResult].wordCode = -1;
 }
 
 /*************************显示词法分析结果*******************************/
 void disp1() {
 	int temp1 = 0;
 	printf("\n*****************词法分析结果********************\n");
-	for (temp1 = 0; temp1 < count_buf; temp1++) {
-		printf("\t%d\t\t%d\n", buffer_lexical[temp1].typeCode_word, buffer_lexical[temp1].value_word);
+	for (temp1 = 0; temp1 < count_lexResult; temp1++) {
+		printf("\t%d\t\t%d\n", buffer_lexical[temp1].wordCode, buffer_lexical[temp1].wordSubCode);
 	}
 	//getchar();
 }
 
 /* 词法分析及结果显示 */
-void lexical_analyse() {
+void lexical_analyse_global() {
 	init_source_file();		// 初始化输入文件
-	readCh_from_buffer();	// 从一行字符缓冲区中读取一个字符
-	scan();					// 词法分析
+	/* 从一行字符缓冲区中读取一个字符
+		若当前是字符结束标记则从源程序先读一行字符串
+		再从缓冲区中读一个字符 */
+	readCh_from_buffer();
+	lexical_analyse();					// 词法分析
 	disp1();				// 显示词法分析结果
 }
