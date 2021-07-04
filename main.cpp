@@ -13,7 +13,7 @@ using namespace std;
 ntab ntab2[200];
 int label = 0;		// 指向ntab2的指针?
 
-aa	// 词法分析结果缓冲区
+two_exp	// 词法分析结果缓冲区
 n,				// 当前字符
 n1,				// 当前表达式中的字符
 E,				// 非终结符
@@ -21,7 +21,7 @@ sstack[100],	// 符号栈
 ibuf[100],		// 缓冲区
 stack[1000];	// 语法分析加工处理使用的符号栈
 
-aa oth;//四元式中的空白位置
+two_exp oth;//四元式中的空白位置
 
 
 fourexp fexp[200];
@@ -107,10 +107,10 @@ static int action2[16][11] =
 /********************从二元式读入一个符号*********************/
 void readnu()
 {
-	if (pbuf->sy1 >= 0)
+	if (pbuf->typeCode_word >= 0)
 	{
-		n.sy1 = pbuf->sy1;
-		n.pos = pbuf->pos;
+		n.typeCode_word = pbuf->typeCode_word;
+		n.value_word = pbuf->value_word;
 		pbuf++;
 	}
 }
@@ -121,13 +121,13 @@ int newtemp()
 	return newt;
 }
 /***********************生成四元式**************************/
-int gen(const char op1[], struct aa arg11, struct aa arg22, int result1)
+int gen(const char op1[], struct two_exp arg11, struct two_exp arg22, int result1)
 {
 	strcpy_s(fexp[nxq].op, op1);
-	fexp[nxq].arg1.sy1 = arg11.sy1;
-	fexp[nxq].arg1.pos = arg11.pos;
-	fexp[nxq].arg2.sy1 = arg22.sy1;
-	fexp[nxq].arg2.pos = arg22.pos;
+	fexp[nxq].arg1.typeCode_word = arg11.typeCode_word;
+	fexp[nxq].arg1.value_word = arg11.value_word;
+	fexp[nxq].arg2.typeCode_word = arg22.typeCode_word;
+	fexp[nxq].arg2.value_word = arg22.value_word;
 	fexp[nxq].result = result1;
 	nxq++;
 	return nxq - 1;
@@ -199,7 +199,7 @@ int change2(int chan) {
 /*********************赋值语句和算术表达式的分析**********************/
 int lrparse1(int num)
 {
-	lr1 = action1[stack1[sp1]][change1(n1.sy1)];
+	lr1 = action1[stack1[sp1]][change1(n1.typeCode_word)];
 	if (lr1 == -1) {
 		printf("\n算术表达式或赋值语句出错!\n");
 		// getchar();
@@ -210,14 +210,14 @@ int lrparse1(int num)
 	if ((lr1 < 10) && (lr1 >= 0)) {
 		sp1++;
 		stack1[sp1] = lr1;
-		if (n1.sy1 != tempsy) {
+		if (n1.typeCode_word != tempsy) {
 			ssp++;
 			num++;
-			sstack[ssp].sy1 = n1.sy1;//将变量名压栈
-			sstack[ssp].pos = n1.pos;//将变量名地址压栈
+			sstack[ssp].typeCode_word = n1.typeCode_word;//将变量名压栈
+			sstack[ssp].value_word = n1.value_word;//将变量名地址压栈
 		}
-		n1.sy1 = ibuf[num].sy1;
-		n1.pos = ibuf[num].pos;
+		n1.typeCode_word = ibuf[num].typeCode_word;
+		n1.value_word = ibuf[num].value_word;
 		lrparse1(num);
 	}
 	/* 归约状态 */
@@ -225,40 +225,40 @@ int lrparse1(int num)
 		switch (lr1) {
 		case 100:break;// S'->E
 		case 101:
-			E.pos = newtemp();// E->E+E
-			gen("+", sstack[ssp - 2], sstack[ssp], E.pos + 100);
+			E.value_word = newtemp();// E->E+E
+			gen("+", sstack[ssp - 2], sstack[ssp], E.value_word + 100);
 			ssp = ssp - 2;
-			sstack[ssp].sy1 = tempsy;
-			sstack[ssp].pos = E.pos;
+			sstack[ssp].typeCode_word = tempsy;
+			sstack[ssp].value_word = E.value_word;
 			sp1 = sp1 - 3;//产生式右部长度为3，故归约后栈指针减3
 			break;
 		case 102:
-			E.pos = newtemp();// E->E*E
-			gen("*", sstack[ssp - 2], sstack[ssp], E.pos + 100);
+			E.value_word = newtemp();// E->E*E
+			gen("*", sstack[ssp - 2], sstack[ssp], E.value_word + 100);
 			ssp = ssp - 2;
-			sstack[ssp].sy1 = tempsy;
-			sstack[ssp].pos = E.pos;
+			sstack[ssp].typeCode_word = tempsy;
+			sstack[ssp].value_word = E.value_word;
 			sp1 = sp1 - 3;
 			break;
 		case 103:
-			E.pos = sstack[ssp - 1].pos; //E->(E)
+			E.value_word = sstack[ssp - 1].value_word; //E->(E)
 			ssp = ssp - 2;
-			sstack[ssp].sy1 = tempsy;
-			sstack[ssp].pos = E.pos;
+			sstack[ssp].typeCode_word = tempsy;
+			sstack[ssp].value_word = E.value_word;
 			sp1 = sp1 - 3;
 			break;
 		case 104:
-			E.pos = sstack[ssp].pos;//E->i
+			E.value_word = sstack[ssp].value_word;//E->i
 			sp1--;
 			break;
 		}
-		n1.sy1 = tempsy;//归约后为非终结符
-		n1.pos = E.pos;
+		n1.typeCode_word = tempsy;//归约后为非终结符
+		n1.value_word = E.value_word;
 		lrparse1(num);
 	}
 	if ((lr1 == ACC) && (stack1[sp1] == 1))//归约A->i:=E
 	{
-		gen(":=", sstack[ssp], oth, ibuf[0].pos);
+		gen(":=", sstack[ssp], oth, ibuf[0].value_word);
 		ssp = ssp - 3;
 		sp1 = sp1 - 3;
 	}
@@ -267,7 +267,7 @@ int lrparse1(int num)
 int lrparse2(int num)
 {
 	int templabel;
-	lr1 = action2[stack1[sp1]][change2(n1.sy1)];
+	lr1 = action2[stack1[sp1]][change2(n1.typeCode_word)];
 	if (lr1 == -1)
 	{
 		if (sign == 2) printf("\nwhile语句出错\n");
@@ -281,12 +281,12 @@ int lrparse2(int num)
 		sp1++;
 		stack1[sp1] = lr1;
 		ssp++;
-		sstack[sp1].sy1 = n1.sy1;
-		sstack[ssp].pos = n1.pos;
-		if ((n1.sy1 != tempsy) && (n1.sy1 != EA) && (n1.sy1 != E0))
+		sstack[sp1].typeCode_word = n1.typeCode_word;
+		sstack[ssp].value_word = n1.value_word;
+		if ((n1.typeCode_word != tempsy) && (n1.typeCode_word != EA) && (n1.typeCode_word != E0))
 			num++;
-		n1.sy1 = ibuf[num].sy1;
-		n1.pos = ibuf[num].pos;
+		n1.typeCode_word = ibuf[num].typeCode_word;
+		n1.value_word = ibuf[num].value_word;
 		lrparse2(num);
 	}
 	if ((lr1 >= 100) && (lr1 < 109))//归约状态
@@ -302,12 +302,12 @@ int lrparse2(int num)
 			sp1--;
 			ssp--;
 			label++;
-			n1.sy1 = tempsy;
+			n1.typeCode_word = tempsy;
 			break;
 		case 102://B->i rop i
 			ntab2[label].tc = nxq;
 			ntab2[label].fc = nxq + 1;
-			switch (sstack[ssp - 1].pos)
+			switch (sstack[ssp - 1].value_word)
 			{
 			case 0:
 				gen("j<=", sstack[ssp - 2], sstack[ssp], 0);
@@ -332,14 +332,14 @@ int lrparse2(int num)
 			sp1 = sp1 - 3;
 			ssp = ssp - 3;
 			label++;
-			n1.sy1 = tempsy;
+			n1.typeCode_word = tempsy;
 			break;
 		case 103://B->(B)
 			label = label - 1;
 			ssp = ssp - 3;
 			sp1 = sp1 - 3;
 			label++;
-			n1.sy1 = tempsy;
+			n1.typeCode_word = tempsy;
 			break;
 		case 104://B->not B
 			label = label - 1;
@@ -349,7 +349,7 @@ int lrparse2(int num)
 			ssp = ssp - 2;
 			sp1 = sp1 - 2;
 			label++;
-			n1.sy1 = tempsy;
+			n1.typeCode_word = tempsy;
 			break;
 		case 105://A->B and
 			backpatch(ntab2[label - 1].tc, nxq);
@@ -357,7 +357,7 @@ int lrparse2(int num)
 			ssp = ssp - 2;
 			sp1 = sp1 - 2;
 			label++;
-			n1.sy1 = EA;
+			n1.typeCode_word = EA;
 			break;
 		case 106://B->AB
 			label = label - 2;
@@ -366,7 +366,7 @@ int lrparse2(int num)
 			ssp = ssp - 2;
 			sp1 = sp1 - 2;
 			label++;
-			n1.sy1 = tempsy;
+			n1.typeCode_word = tempsy;
 			break;
 		case 107://O->B or
 			backpatch(ntab2[label - 1].fc, nxq);
@@ -374,7 +374,7 @@ int lrparse2(int num)
 			ssp = ssp - 2;
 			sp1 = sp1 - 2;
 			label++;
-			n1.sy1 = E0;
+			n1.typeCode_word = E0;
 			break;
 		case 108://B->0B
 			label = label - 2;
@@ -383,7 +383,7 @@ int lrparse2(int num)
 			ssp = ssp - 2;
 			sp1 = sp1 - 2;
 			label++;
-			n1.sy1 = tempsy;
+			n1.typeCode_word = tempsy;
 			break;
 		}
 		lrparse2(num);
@@ -418,34 +418,34 @@ int lrparse()
 {
 	int i1 = 0;
 	int num = 0;//指向表达式缓冲区
-	if (test(n.sy1))
+	if (test(n.typeCode_word))
 	{
-		if (stack[sp].sy1 == sy_while) sign = 2;
+		if (stack[sp].typeCode_word == sy_while) sign = 2;
 		else
 		{
-			if (stack[sp].sy1 == sy_if) sign = 3;
+			if (stack[sp].typeCode_word == sy_if) sign = 3;
 			else sign = 1;
 		}
 		do
 		{
-			ibuf[i1].sy1 = n.sy1;
-			ibuf[i1].pos = n.pos;
+			ibuf[i1].typeCode_word = n.typeCode_word;
+			ibuf[i1].value_word = n.value_word;
 			readnu();
 			i1++;
-		} while (test(n.sy1));//把算术或布尔表达式放入缓冲区
-		ibuf[i1].sy1 = jinghao;
+		} while (test(n.typeCode_word));//把算术或布尔表达式放入缓冲区
+		ibuf[i1].typeCode_word = jinghao;
 		pbuf--;//词法分析缓冲区指针减1
-		sstack[0].sy1 = jinghao;
+		sstack[0].typeCode_word = jinghao;
 		ssp = 0;//符号栈初始化
 		if (sign == 1)//赋值语句处理
 		{
 			sp1 = 0;
 			stack1[sp1] = 0;//状态栈1初始化
 			num = 2;
-			n1.sy1 = ibuf[num].sy1;
-			n1.pos = ibuf[num].pos;
+			n1.typeCode_word = ibuf[num].typeCode_word;
+			n1.value_word = ibuf[num].value_word;
 			lrparse1(num);//处理赋值语句
-			n.sy1 = a;//当前文法符号置为a（赋值语句）
+			n.typeCode_word = a;//当前文法符号置为a（赋值语句）
 		}
 		if ((sign == 2) || (sign == 3))//布尔表达式处理
 		{
@@ -455,23 +455,23 @@ int lrparse()
 			stack1[sp1] = 0;
 			num = 0;
 
-			n1.sy1 = ibuf[num].sy1;
-			n1.pos = ibuf[num].pos;
+			n1.typeCode_word = ibuf[num].typeCode_word;
+			n1.value_word = ibuf[num].value_word;
 			lrparse2(num);
 			labelmark[pointmark].tc1 = ntab2[label - 1].tc;
 			labelmark[pointmark].fc1 = ntab2[label - 1].fc;
 			backpatch(labelmark[pointmark].tc1, nxq);
-			n.sy1 = e;//当前万能法符号置e（布尔表达式）
+			n.typeCode_word = e;//当前万能法符号置e（布尔表达式）
 		}
 	}
-	lr = action[stack[sp].pos][n.sy1];
+	lr = action[stack[sp].value_word][n.typeCode_word];
 	//输出状态栈信息
-	printf("stack[%d]=%d\t\tn=%d\t\tlr=%d\n", sp, stack[sp].pos, n.sy1, lr);
+	printf("stack[%d]=%d\t\tn=%d\t\tlr=%d\n", sp, stack[sp].value_word, n.typeCode_word, lr);
 	if ((lr < 19) && (lr >= 0))//移进状态
 	{
 		sp++;
-		stack[sp].pos = lr;
-		stack[sp].sy1 = n.sy1;
+		stack[sp].value_word = lr;
+		stack[sp].typeCode_word = n.typeCode_word;
 		readnu();
 		lrparse();
 	}
@@ -483,10 +483,10 @@ int lrparse()
 		case 101://S->if e then s else s
 			printf("\nS->if e then S else S 归约\n");
 			sp = sp - 6;
-			n.sy1 = S;
+			n.typeCode_word = S;
 			fexp[labeltemp[pointtemp]].result = nxq;
 			pointtemp--;
-			if (stack[sp].sy1 == sy_then)
+			if (stack[sp].typeCode_word == sy_then)
 			{
 				gen("j", oth, oth, 0);
 				backpatch(labelmark[pointmark].fc1, nxq);
@@ -494,7 +494,7 @@ int lrparse()
 				labeltemp[pointtemp] = nxq - 1;
 			}
 			pointmark--;
-			if (stack[sp].sy1 == sy_do)
+			if (stack[sp].typeCode_word == sy_do)
 			{
 				gen("j", oth, oth, labelmark[pointmark].nxq1);
 				backpatch(labelmark[pointmark].fc1, nxq);
@@ -502,14 +502,14 @@ int lrparse()
 			break;
 		case 102:printf("\nS->while e do S 归约\n");
 			sp = sp - 4;
-			n.sy1 = S;
+			n.typeCode_word = S;
 			pointmark--;
-			if (stack[sp].sy1 == sy_do)
+			if (stack[sp].typeCode_word == sy_do)
 			{
 				gen("j", oth, oth, labelmark[pointmark].nxq1);
 				backpatch(labelmark[pointmark].fc1, nxq);
 			}
-			if (stack[sp].sy1 == sy_then)
+			if (stack[sp].typeCode_word == sy_then)
 			{
 				gen("j", oth, oth, 0);
 				fexp[labelmark[pointmark].fc1].result = nxq;
@@ -519,15 +519,15 @@ int lrparse()
 			break;
 		case 103:printf("\nS->begin L end 归约\n");
 			sp = sp - 3;
-			n.sy1 = S;
-			if (stack[sp].sy1 == sy_then)
+			n.typeCode_word = S;
+			if (stack[sp].typeCode_word == sy_then)
 			{
 				gen("j", oth, oth, 0);
 				backpatch(labelmark[pointmark].fc1, nxq);
 				pointtemp++;
 				labeltemp[pointtemp] = nxq - 1;
 			}
-			if (stack[sp].sy1 == sy_do)
+			if (stack[sp].typeCode_word == sy_do)
 			{
 				gen("j", oth, oth, labelmark[pointmark].nxq1);
 				backpatch(labelmark[pointmark].fc1, nxq);
@@ -535,15 +535,15 @@ int lrparse()
 			break;
 		case 104:printf("\nS->a 归约\n");
 			sp = sp - 1;
-			n.sy1 = S;
-			if (stack[sp].sy1 == sy_then)
+			n.typeCode_word = S;
+			if (stack[sp].typeCode_word == sy_then)
 			{
 				gen("j", oth, oth, 0);
 				backpatch(labelmark[pointmark].fc1, nxq);
 				pointtemp++;
 				labeltemp[pointtemp] = nxq - 1;
 			}
-			if (stack[sp].sy1 == sy_do)
+			if (stack[sp].typeCode_word == sy_do)
 			{
 				gen("j", oth, oth, labelmark[pointmark].nxq1);
 				backpatch(labelmark[pointmark].fc1, nxq);
@@ -551,11 +551,11 @@ int lrparse()
 			break;
 		case 105:printf("\nL->S 归约\n");
 			sp = sp - 1;
-			n.sy1 = L;
+			n.typeCode_word = L;
 			break;
 		case 106:printf("\nL->S L 归约\n");
 			sp = sp - 3;
-			n.sy1 = L;
+			n.typeCode_word = L;
 			break;
 		}
 		pbuf--;
@@ -577,30 +577,30 @@ void disp2()
 			printf("\n");
 		printf("%d\t", temp1);
 		printf("（%s,\t", fexp[temp1].op);
-		if (fexp[temp1].arg1.sy1 == ident)//为变量
-			printf("%s,\t", table_variable[fexp[temp1].arg1.pos]);
+		if (fexp[temp1].arg1.typeCode_word == ident)//为变量
+			printf("%s,\t", table_variable[fexp[temp1].arg1.value_word]);
 		else
 		{
-			if (fexp[temp1].arg1.sy1 == tempsy)//为临时变量
-				printf("T%d,\t", fexp[temp1].arg1.pos);
+			if (fexp[temp1].arg1.typeCode_word == tempsy)//为临时变量
+				printf("T%d,\t", fexp[temp1].arg1.value_word);
 			else
 			{
-				if (fexp[temp1].arg1.sy1 == intconst)//为整常量
-					printf("%d,\t", fexp[temp1].arg1.pos);
+				if (fexp[temp1].arg1.typeCode_word == intconst)//为整常量
+					printf("%d,\t", fexp[temp1].arg1.value_word);
 				else//否则
 					printf(",\t");
 			}
 		}
-		if (fexp[temp1].arg2.sy1 == ident)
-			printf("%s,\t", table_variable[fexp[temp1].arg2.pos]);
+		if (fexp[temp1].arg2.typeCode_word == ident)
+			printf("%s,\t", table_variable[fexp[temp1].arg2.value_word]);
 		else
 		{
-			if (fexp[temp1].arg2.sy1 == tempsy)
-				printf("T%d,\t", fexp[temp1].arg2.pos);
+			if (fexp[temp1].arg2.typeCode_word == tempsy)
+				printf("T%d,\t", fexp[temp1].arg2.value_word);
 			else
 			{
-				if (fexp[temp1].arg2.sy1 == intconst)
-					printf("%d,\t", fexp[temp1].arg2.pos);
+				if (fexp[temp1].arg2.typeCode_word == intconst)
+					printf("%d,\t", fexp[temp1].arg2.value_word);
 				else printf(",\t");
 			}
 		}
@@ -626,7 +626,7 @@ void disp2()
 void disp3()
 {
 	int tttt;
-	printf("\n\n程序总共%d行，产生了%d个二元式!\n", lnum, count_buf);
+	printf("\n\n程序总共%d行，产生了%d个二元式!\n", lineNum_sourceCode, count_buf);
 	// getchar();
 	cout << endl;
 	printf("\n******************变量名表**********************\n");
@@ -642,10 +642,10 @@ int main() {
 	lexical_analyse();	// 词法分析
 
 	disp3();			// 显示变量名
-	stack[sp].pos = 0;
-	stack[sp].sy1 = -1;	// 初始化状态栈
+	stack[sp].value_word = 0;
+	stack[sp].typeCode_word = -1;	// 初始化状态栈
 	stack1[sp1] = 0;	// 初始化状态栈1
-	oth.sy1 = -1;
+	oth.typeCode_word = -1;
 	printf("\n*************状态栈加工过程及归约顺序*************\n");
 	readnu();//从二元式读一个字符
 	lrparse();

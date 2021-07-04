@@ -39,17 +39,17 @@ struct rwords {
 };
 extern rwords reswords[10];
 
-// 二元式结构
-struct aa {
-	int sy1;	// 单词种别编码
-	int pos;	// 单词自身的值
+/* 二元式结构 */
+struct two_exp {
+	int typeCode_word;	// 单词种别编码
+	int value_word;		// 单词自身的值
 };
 
 /* 四元式的结构 */
 struct fourexp {
 	char op[10];
-	struct aa arg1;
-	struct aa arg2;
+	struct two_exp arg1;
+	struct two_exp arg2;
 	int result;
 };
 
