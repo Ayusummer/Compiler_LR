@@ -4,19 +4,23 @@
 
 extern FILE* source_file;				// 源程序文件
 extern errno_t error_source_file;		// 读取源文件需要的异常返回变量
+void init_source_file();				// 初始化源文件
 
 extern char  buffer_line[81];			// 一行字符缓冲区(最多80个)
 extern char* pointer_buffer;			// 字符缓冲区指针
 extern char  current_ch;				// 当前字符
-
-
-
 extern int lineNum_sourceCode;			// 源程序长度(行数)
+void readLine_to_buffer();				// 从文件读一行到缓冲区
+void readCh_from_buffer();				// 从缓冲区读取一个字符 
+char show_nxtCh_buffer();				// 展示缓冲区下一个字符
+
+
+
+
 extern two_exp buffer_lexical[1000];	// 词法分析结果缓冲区
 
-void init_source_file();				// 初始化源文件
-void readLine_to_buffer();				// 从文件读一行到缓冲区
-void readCh_from_buffer();				// 从缓冲区读取一个字符
+
+
 
 
 int find(char spel[]);	// 标识符和关键字的识别

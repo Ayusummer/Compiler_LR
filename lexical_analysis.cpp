@@ -63,6 +63,15 @@ void readCh_from_buffer() {
 	pointer_buffer++;
 }
 
+/* 展示缓冲区下一个字符
+	用于 #~ 程序结束标记的判断
+	若当前字符为字符串结束标记的话返回 NULL, 表示没有下一个字符 */
+char show_nxtCh_buffer() {
+	if (current_ch == '\0')
+		return NULL;
+	return *pointer_buffer;
+}
+
 
 /***********************标识符和关键字的识别********************/
 // 与变量名表中的变量进行匹配，查找变量名表
@@ -137,7 +146,7 @@ void number() {
 /***********************扫描函数************************/
 /* 滤除多余空格并对主要单词分析处理 */
 void scan() {
-	while (current_ch != '~') {
+	while (!(current_ch == '#' && show_nxtCh_buffer() == '~')) {
 		switch (current_ch) {
 		case ' ':break;
 		case 'a':
