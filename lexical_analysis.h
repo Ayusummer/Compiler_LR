@@ -36,7 +36,7 @@ extern int num_lexVariable;				// 词法分析缓冲区中含有的变量的数�
 void numberRecognize();		// 数字识别
 
 void lexical_analyse();		// 扫描源程序->缓冲区->滤除多余空格并对主要单词分析处理
-void disp1();				// 显示词法分析结果
+void lexical_analyse_show();				// 显示词法分析结果
 
 /* 词法分析及结果显示 */
 void lexical_analyse_global();

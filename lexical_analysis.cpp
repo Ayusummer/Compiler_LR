@@ -1,6 +1,9 @@
 ﻿#pragma once
 #include"lexical_analysis.h"
 #include <string.h>
+#include <iostream>
+#include<iomanip>
+using namespace std;
 
 /* 源程序文件
 	因为需要调用函数进行初始化, 因此这里先定义为空 */
@@ -196,71 +199,50 @@ void lexical_analyse() {
 		case 'a': /* continue case, case 语句不写 break 那么程序就会执行下一个case
 					所以说下面所有的 case 空操作都会依次执行,
 					也就是说只要识别到字母那么必然会一路执行到 case z 的 stringRecognize()来识别保留字和标识符*/
-		case 'b': // continue case
-		case 'c': // continue case
-		case 'd': // continue case
-		case 'e': // continue case
-		case 'f': // continue case
-		case 'g': // continue case
-		case 'h': // continue case
-		case 'i': // continue case
-		case 'j': // continue case
-		case 'k': // continue case
-		case 'l': // continue case
-		case 'm': // continue case
-		case 'n': // continue case
-		case 'o': // continue case
-		case 'p': // continue case
-		case 'q': // continue case
-		case 'r': // continue case
-		case 's': // continue case
-		case 't': // continue case
-		case 'u': // continue case
-		case 'v': // continue case
-		case 'w': // continue case
-		case 'x': // continue case
-		case 'y': // continue case
-		case 'z':
-			stringRecognize();	// 识别保留字和标识符
+		case 'b': case 'c':	case 'd': case 'e': case 'f': case 'g': case 'h': case 'i':	case 'j':
+		case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's':
+		case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+			stringRecognize();	// 识别保留字和标识符, 变量名
 			break;
-		case '0': // continue case
-		case '1': // continue case
-		case '2': // continue case
-		case '3': // continue case
-		case '4': // continue case
-		case '5': // continue case
-		case '6': // continue case
-		case '7': // continue case
-		case '8': // continue case
-		case '9':
+		case '0': case '1': case '2': case '3': case '4': case '5':
+		case '6': case '7': case '8': case '9':
 			numberRecognize();	// 识别整常数
 			break;
 		case '<':
 			readCh_from_buffer();
+			// <= 小于等于
 			if (current_ch == '=')
-				buffer_lexical[count_lexResult].wordSubCode = 0;// <=
-			else
-			{
-				if (current_ch == '>') buffer_lexical[count_lexResult].wordSubCode = 4;// <>
-				else
-				{
-					buffer_lexical[count_lexResult].wordSubCode = 1;//<
+				buffer_lexical[count_lexResult].wordSubCode = 0;
+			else {
+				// <> 不等于
+				if (current_ch == '>')
+					buffer_lexical[count_lexResult].wordSubCode = 4;
+				// < 小于
+				else {
+					buffer_lexical[count_lexResult].wordSubCode = 1;	// <
 					pointer_buffer--;
 				}
 			}
+			// 识别到 < 那么主种别编码就是关系运算符 rop
 			buffer_lexical[count_lexResult].wordCode = rop;
 			count_lexResult++;
 			break;
 		case '>':
 			readCh_from_buffer();
+			// >= 大于等于
 			if (current_ch == '=')
-				buffer_lexical[count_lexResult].wordSubCode = 2;// >=
-			else
-			{
-				buffer_lexical[count_lexResult].wordSubCode = 3;// >
+				buffer_lexical[count_lexResult].wordSubCode = 2;
+			// > 大于
+			else {
+				buffer_lexical[count_lexResult].wordSubCode = 3;
 				pointer_buffer--;
 			}
 			buffer_lexical[count_lexResult].wordCode = rop;
+			count_lexResult++;
+			break;
+		case '=':
+			buffer_lexical[count_lexResult].wordCode = rop;
+			buffer_lexical[count_lexResult].wordSubCode = 5;
 			count_lexResult++;
 			break;
 		case '(':
@@ -279,31 +261,22 @@ void lexical_analyse() {
 			buffer_lexical[count_lexResult].wordCode = op_plus;
 			count_lexResult++;
 			break;
-			/*
-			case '-':
-				buffer_lexical[count_lexResult].wordCode = op_sub;
-				count_lexResult++;
-				break;
-			*/
+		case '-':
+			buffer_lexical[count_lexResult].wordCode = op_sub;
+			count_lexResult++;
+			break;
 		case '*':
 			buffer_lexical[count_lexResult].wordCode = op_times;
 			count_lexResult++;
 			break;
-			/*
 		case '/':
 			buffer_lexical[count_lexResult].wordCode = op_div;
 			count_lexResult++;
 			break;
-			*/
 		case ':':
 			readCh_from_buffer();
 			if (current_ch == '=')
 				buffer_lexical[count_lexResult].wordCode = becomes;// :=
-			count_lexResult++;
-			break;
-		case '=':
-			buffer_lexical[count_lexResult].wordCode = rop;
-			buffer_lexical[count_lexResult].wordSubCode = 5;
 			count_lexResult++;
 			break;
 		case ';':
@@ -317,13 +290,17 @@ void lexical_analyse() {
 }
 
 /*************************显示词法分析结果*******************************/
-void disp1() {
+void lexical_analyse_show() {
 	int temp1 = 0;
-	printf("\n*****************词法分析结果********************\n");
+	printf("\n***************** 词法分析结果 ********************\n");
+	cout << "    " << setw(8) << "种别编码"
+		<< "                     " << setw(8) << "子类编码"
+		<< endl;
 	for (temp1 = 0; temp1 < count_lexResult; temp1++) {
-		printf("\t%d\t\t%d\n", buffer_lexical[temp1].wordCode, buffer_lexical[temp1].wordSubCode);
+		cout << "" << setw(8) << buffer_lexical[temp1].wordCode
+			<< "                     " << setw(8) << buffer_lexical[temp1].wordSubCode
+			<< endl;
 	}
-	//getchar();
 }
 
 /* 词法分析及结果显示 */
@@ -334,5 +311,5 @@ void lexical_analyse_global() {
 		再从缓冲区中读一个字符 */
 	readCh_from_buffer();
 	lexical_analyse();					// 词法分析
-	disp1();				// 显示词法分析结果
+	lexical_analyse_show();				// 显示词法分析结果
 }
