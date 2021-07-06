@@ -21,13 +21,10 @@ word_variable = 56,
 // 整数
 intconst = 57;
 
-
-
 struct ntab {
 	int tc;		// 真
 	int fc;		// 假
 };
-
 
 
 /* 二元式结构 */

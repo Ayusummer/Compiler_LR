@@ -303,6 +303,19 @@ void lexical_analyse_show() {
 	}
 }
 
+/*************************打印变量名表*******************************/
+void show_variableTable() {
+	int tttt;
+	printf("\n\n程序总共%d行，产生了%d个二元式!\n", lineNum_sourceCode, count_lexResult);
+	// getchar();
+	cout << endl;
+	printf("\n******************变量名表**********************\n");
+	for (tttt = 0; tttt < num_lexVariable; tttt++)
+		printf("%d\t%s\n", tttt, table_variable[tttt]);
+	// getchar();
+	cout << endl;
+}
+
 /* 词法分析及结果显示 */
 void lexical_analyse_global() {
 	init_source_file();		// 初始化输入文件
@@ -312,4 +325,5 @@ void lexical_analyse_global() {
 	readCh_from_buffer();
 	lexical_analyse();					// 词法分析
 	lexical_analyse_show();				// 显示词法分析结果
+	show_variableTable();			// 显示变量名
 }

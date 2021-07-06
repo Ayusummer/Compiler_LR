@@ -38,5 +38,7 @@ void numberRecognize();		// 数字识别
 void lexical_analyse();		// 扫描源程序->缓冲区->滤除多余空格并对主要单词分析处理
 void lexical_analyse_show();				// 显示词法分析结果
 
+/* 打印变量名表 */
+void show_variableTable();
 /* 词法分析及结果显示 */
 void lexical_analyse_global();

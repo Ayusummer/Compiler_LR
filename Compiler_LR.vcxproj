@@ -142,6 +142,7 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="lexical_analysis.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="parsing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="pas.dat" />
@@ -149,6 +150,7 @@
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="lexical_analysis.h" />
+    <ClInclude Include="parsing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

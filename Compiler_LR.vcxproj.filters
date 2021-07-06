@@ -24,6 +24,9 @@
     <ClCompile Include="lexical_analysis.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="parsing.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="pas.dat">
@@ -35,6 +38,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="lexical_analysis.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="parsing.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
